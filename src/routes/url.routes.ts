@@ -1,11 +1,15 @@
-import express from "express";
-import * as urlController from "../controllers/url.controller";
+import { Router } from 'express';
+import * as urlController from '../controllers/url.controller';
 
-const router = express.Router();
+const router = Router();
 
-router.post("/encurtar", urlController.createShortUrl);
-router.get("/list", urlController.getAllUrls);
-router.delete("/delete/:shortCode", urlController.deleteUrl); // Certifique-se de que esta rota está correta
-router.get("/stats/:shortCode", urlController.getUrlStats);
+// Rota para criar uma URL curta
+router.post('/encurtar', urlController.createShortUrl);
+
+// Rota para obter estatísticas de uma URL
+router.get('/stats/:shortCode', urlController.getUrlStats);
+
+// Rota para listar todas as URLs
+router.get('/list', urlController.getAllUrls);
 
 export default router;

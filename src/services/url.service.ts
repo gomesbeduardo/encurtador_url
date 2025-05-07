@@ -1,54 +1,31 @@
-import { PrismaClient } from "@prisma/client";
-import { nanoid } from "nanoid";
+import { PrismaClient } from '@prisma/client';
+import { nanoid } from 'nanoid';
 
 const prisma = new PrismaClient();
 
-// Criar uma URL curta
-export const createShortUrl = async (longUrl: string) => {
+export const createShortUrl = async (longUrl: string): Promise<any> => {
   try {
-    // Gerar um código curto único
-    const shortCode = nanoid(6); // 6 caracteres
+    const shortCode = nanoid(8); // Gera um código curto de 8 caracteres
     
-    // Criar a URL no banco de dados
-    const url = await prisma.url.create({
+    const newUrl = await prisma.url.create({
       data: {
         longUrl,
         shortCode,
-        clicks: 0,
       },
     });
     
-    // Emitir evento de URL criada via Socket.io
-    try {
-      const socketService = await import('./socket.service');
-      socketService.emitUrlCreated(url);
-    } catch (socketError) {
-      console.error('Erro ao emitir evento de criação:', socketError);
-    }
-    
-    return url;
+    return {
+      shortCode: newUrl.shortCode,
+      longUrl: newUrl.longUrl,
+      shortUrl: `${process.env.BASE_URL}/${newUrl.shortCode}`,
+    };
   } catch (error) {
     console.error('Erro ao criar URL curta:', error);
     throw error;
   }
 };
 
-// Obter todas as URLs
-export const getAllUrls = async () => {
-  try {
-    return await prisma.url.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-  } catch (error) {
-    console.error('Erro ao obter URLs:', error);
-    throw error;
-  }
-};
-
-// Obter URL pelo código curto
-export const getUrlByShortCode = async (shortCode: string) => {
+export const findUrlByShortCode = async (shortCode: string) => {
   try {
     return await prisma.url.findUnique({
       where: {
@@ -56,15 +33,14 @@ export const getUrlByShortCode = async (shortCode: string) => {
       },
     });
   } catch (error) {
-    console.error('Erro ao obter URL pelo código curto:', error);
+    console.error('Erro ao buscar URL:', error);
     throw error;
   }
 };
 
-// Incrementar contador de cliques
 export const incrementClicks = async (shortCode: string) => {
   try {
-    const url = await prisma.url.update({
+    return await prisma.url.update({
       where: {
         shortCode,
       },
@@ -74,71 +50,46 @@ export const incrementClicks = async (shortCode: string) => {
         },
       },
     });
-    
-    // Emitir evento de URL clicada via Socket.io
-    try {
-      const socketService = await import('./socket.service');
-      socketService.emitUrlClicked(url);
-    } catch (socketError) {
-      console.error('Erro ao emitir evento de clique:', socketError);
-    }
-    
-    return url;
   } catch (error) {
     console.error('Erro ao incrementar cliques:', error);
     throw error;
   }
 };
 
-// Excluir URL
-export const deleteUrl = async (shortCode: string) => {
+export const getUrlStats = async (shortCode: string) => {
   try {
-    console.log('Tentando excluir URL com código:', shortCode);
-    
-    const result = await prisma.url.delete({
+    return await prisma.url.findUnique({
       where: {
         shortCode,
       },
+      select: {
+        shortCode: true,
+        longUrl: true,
+        clicks: true,
+        createdAt: true,
+      },
     });
-    
-    console.log('URL excluída com sucesso:', result);
-    
-    // Emitir evento de URL excluída via Socket.io
-    try {
-      const socketService = await import('./socket.service');
-      socketService.emitUrlDeleted(shortCode);
-    } catch (socketError) {
-      console.error('Erro ao emitir evento de exclusão:', socketError);
-    }
-    
-    return result;
   } catch (error) {
-    console.error('Erro ao excluir URL:', error);
+    console.error('Erro ao obter estatísticas:', error);
     throw error;
   }
 };
 
-// Obter estatísticas de uma URL
-export const getUrlStats = async (shortCode: string) => {
+export const getAllUrls = async () => {
   try {
-    const url = await prisma.url.findUnique({
-      where: {
-        shortCode,
+    return await prisma.url.findMany({
+      orderBy: {
+        createdAt: 'desc'
       },
+      select: {
+        shortCode: true,
+        longUrl: true,
+        clicks: true,
+        createdAt: true,
+      }
     });
-    
-    if (!url) {
-      return null;
-    }
-    
-    return {
-      longUrl: url.longUrl,
-      shortCode: url.shortCode,
-      clicks: url.clicks,
-      createdAt: url.createdAt,
-    };
   } catch (error) {
-    console.error('Erro ao obter estatísticas da URL:', error);
+    console.error('Erro ao listar URLs:', error);
     throw error;
   }
 };

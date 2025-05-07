@@ -1,33 +1,13 @@
 import app from './app';
 import dotenv from 'dotenv';
-import http from 'http';
-import { Server } from 'socket.io';
 
 dotenv.config();
 
 const PORT = process.env.PORT || 3001;
-const server = http.createServer(app);
-
-// Configurar Socket.io
-const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
-  }
-});
-
-// Eventos do Socket.io
-io.on('connection', (socket) => {
-  console.log('Cliente conectado:', socket.id);
-  
-  socket.on('disconnect', () => {
-    console.log('Cliente desconectado:', socket.id);
-  });
-});
 
 // Função para tentar portas alternativas se a porta estiver em uso
 const startServer = (port: number) => {
-  server.listen(port)
+  app.listen(port)
     .on('listening', () => {
       console.log(`Servidor rodando na porta ${port}`);
       console.log(`Acesse: http://localhost:${port}`);
@@ -43,6 +23,3 @@ const startServer = (port: number) => {
 };
 
 startServer(Number(PORT));
-
-// Exportar io para uso em outros arquivos
-export { io };

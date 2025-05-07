@@ -59,24 +59,3 @@ export const getAllUrls = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
-
-export const deleteUrl = async (req: Request, res: Response) => {
-  try {
-    const { shortCode } = req.params;
-    
-    if (!shortCode) {
-      return res.status(400).json({ error: 'Código curto não fornecido' });
-    }
-    
-    const result = await urlService.deleteUrl(shortCode);
-    
-    if (!result) {
-      return res.status(404).json({ error: 'URL não encontrada' });
-    }
-    
-    return res.status(200).json({ message: 'URL excluída com sucesso' });
-  } catch (error) {
-    console.error('Erro ao excluir URL:', error);
-    return res.status(500).json({ error: 'Erro ao excluir URL' });
-  }
-};
